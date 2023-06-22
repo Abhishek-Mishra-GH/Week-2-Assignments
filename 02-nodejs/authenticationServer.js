@@ -29,9 +29,65 @@
   Testing the server - run `npm run test-authenticationServer` command in terminal
  */
 
-const express = require("express")
+const express = require("express");
 const PORT = 3000;
 const app = express();
 // write your logic here, DONT WRITE app.listen(3000) when you're running tests, the tests will automatically start the server
+
+app.use(express.json());
+
+let users = [];
+
+function searchUser(email) {
+  for(let i = 0; i < users.length; i++) {
+    if(users[i].email === email) return i;
+  }
+  return -1;
+}
+
+app.post("/signup", (req, res) => {
+  let user = req.body;
+  let userExistsAtIndex = searchUser(user.email);
+  if(userExistsAtIndex !== -1) res.sendStatus(400);
+  else {
+    newUser = {
+      ...user,
+      id: users.length
+    }
+
+    users.push(newUser);
+    res.status(201).send("Signup successful");
+  }
+});
+
+app.post("/login", (req, res) => {
+  let bd = req.body;
+  let user = users[searchUser(bd.email)]
+  if(user.email === bd.email && user.password === bd.password) {
+    res.status(200).json({
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      authToken: user.id
+    }) 
+  }
+});
+
+app.get("/data", (req, res) => {
+  let email = req.headers.email;
+  let password = req.headers.password;
+  let user = users[searchUser(email)];
+  if(user.email === email && user.password === password) {
+    res.status(200).json({
+      users: users
+    })
+  } else {
+    res.sendStatus(401);
+  }
+});
+
+
+
+// app.listen(3000);
 
 module.exports = app;
